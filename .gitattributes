@@ -8,3 +8,5 @@ Cargo.lock linguist-generated
 *.txt conflict-marker-size=100
 *.svg linguist-generated
 package-lock.json linguist-generated
+
+*.sh text eol=lf
