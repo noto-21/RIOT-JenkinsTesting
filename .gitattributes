@@ -9,4 +9,4 @@ Cargo.lock linguist-generated
 *.svg linguist-generated
 package-lock.json linguist-generated
 
-*.sh text eol=lf
+* text=auto eol=lf
