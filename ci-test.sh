@@ -1,24 +1,18 @@
 #!/bin/bash
 set -e
 
-echo "=== 1. Isolating Embedded Build Environment ==="
-# Maintain our foolproof Windows-to-Docker volume isolation strategy
-mkdir -p /native-build
-cp -r /build/. /native-build
-cd /native-build
+echo "=== 1. Auditing Build System & Toolchains ==="
+# Verify the RIOT Docker image has our ARM compiler ready to go
+arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
 
-echo "=== 2. Auditing Build System & Toolchains ==="
-# Print the compiler version inside the Docker container for the logs
-arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found, relying on native host compiler"
+echo "=== 2. Executing Firmware Compilation Test ==="
+# Navigate to the correctly categorized default example
+cd examples/basic/default
 
-echo "=== 3. Executing Firmware Compilation Test ==="
-# Navigate to the core default example application in RIOT
-cd examples/default
-
-# Compile the firmware for the native computer emulation board
-# This tests the entire codebase structure without needing physical hardware!
+# We use BUILD_DIR=/tmp/riot-build to send all compiled binary artifacts 
+# directly to the lightning-fast Linux memory space, bypassing Windows NTFS entirely!
 echo "Compiling RIOT Firmware for 'native' target..."
-make BOARD=native clean all
+make BOARD=native BUILD_DIR=/tmp/riot-build clean all
 
 echo "========================================="
 echo "   SUCCESS: RIOT Firmware Build Passed!  "
