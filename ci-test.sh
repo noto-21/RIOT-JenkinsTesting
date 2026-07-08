@@ -9,7 +9,7 @@ arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
 # Ensure QEMU is installed in the riotbuild container
 if ! command -v qemu-system-arm &> /dev/null; then
     echo "Installing QEMU for ARM emulation..."
-    apt-get update -qq && apt-get install -y qemu-system-arm
+    apt-get update -qq && apt-get install -y qemu-system-arm socat
 fi
 
 echo "=== 2. Compiling RIOT Firmware ==="
@@ -35,7 +35,7 @@ if [ $RIOT_EXIT_CODE -eq 124 ] || [ $RIOT_EXIT_CODE -ne 0 ]; then
         pip3 install requests --quiet
         
         # Pass the RIOT crash log to the AI
-        python3 /build/esops_analyzer.py "$LOG_PATH"
+        python3 /build/esops_analyzer.py "$LOG_PATH" "RIOT"
     else
         echo "No crash log generated."
     fi
