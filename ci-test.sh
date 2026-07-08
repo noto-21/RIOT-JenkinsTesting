@@ -6,10 +6,16 @@ LOG_PATH="/build/handler.log"
 echo "=== 1. Auditing Environment & Toolchains ==="
 arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
 
+# Check explicitly for socat, which RIOT needs to route QEMU serial output
+if ! command -v socat &> /dev/null; then
+    echo "Installing socat for QEMU serial routing..."
+    apt-get update -qq && apt-get install -y socat
+fi
+
 # Ensure QEMU is installed in the riotbuild container
 if ! command -v qemu-system-arm &> /dev/null; then
     echo "Installing QEMU for ARM emulation..."
-    apt-get update -qq && apt-get install -y qemu-system-arm socat
+    apt-get update -qq && apt-get install -y qemu-system-arm
 fi
 
 echo "=== 2. Compiling RIOT Firmware ==="
