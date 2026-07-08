@@ -27,7 +27,7 @@ echo "=== 3. Executing QEMU Fault Injection ==="
 # Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
 # Redirect both stdout and stderr to log file for LLaMA to read.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
-timeout 10 make BOARD=microbit EMULATE=1 term > "$LOG_PATH" 2>&1
+timeout 10 qemu-system-arm -machine microbit -nographic -serial mon:stdio -kernel /build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
 RIOT_EXIT_CODE=$?
 
 # exit code 124 means 'timeout' killed the process, which is exactly what is expected on a system lockup.
