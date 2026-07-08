@@ -18,13 +18,13 @@ echo "Compiling for 'microbit' (ARM Cortex-M0) target..."
 make BOARD=microbit clean all
 
 echo "=== 3. Executing QEMU Fault Injection ==="
-# We use the 'timeout' command because a HardFault causes RIOT to lock up natively.
-# We redirect both stdout and stderr to our log file for LLaMA to read.
+# Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
+# Redirect both stdout and stderr to log file for LLaMA to read.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
 timeout 10 make BOARD=microbit EMULATE=1 term > "$LOG_PATH" 2>&1
 RIOT_EXIT_CODE=$?
 
-# exit code 124 means 'timeout' killed the process, which is exactly what we expect on a system lockup.
+# exit code 124 means 'timeout' killed the process, which is exactly what is expected on a system lockup.
 if [ $RIOT_EXIT_CODE -eq 124 ] || [ $RIOT_EXIT_CODE -ne 0 ]; then
     echo "WARNING: System locked up or crashed! Capturing telemetry..."
     
