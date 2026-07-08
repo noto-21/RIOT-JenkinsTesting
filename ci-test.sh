@@ -35,11 +35,11 @@ if [ $RIOT_EXIT_CODE -eq 124 ] || [ $RIOT_EXIT_CODE -ne 0 ]; then
     echo "WARNING: System locked up or crashed! Capturing telemetry..."
     
     if [ -f "$LOG_PATH" ]; then
+        echo "=== RAW QEMU OUTPUT ==="
+        cat "$LOG_PATH"
+        echo "======================="
+
         echo "Invoking ESOps LLaMA Fault Detection Engine..."
-        # Ensure dependencies are available in the container
-        apt-get install -y python3-pip
-        pip3 install requests --quiet
-        
         # Pass the RIOT crash log to the AI
         python3 /build/esops_analyzer.py "$LOG_PATH" "RIOT"
     else
