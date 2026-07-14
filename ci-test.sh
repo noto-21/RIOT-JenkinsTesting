@@ -4,7 +4,7 @@
 LOG_PATH="/build/handler.log"
 
 echo "=== 1. Auditing Environment & Toolchains ==="
-# Unconditionally install python3-requests and required tools 
+# Install all required packages upfront
 apt-get update -qq && apt-get install -y qemu-system-arm socat python3-requests
 
 arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
@@ -18,18 +18,18 @@ echo "=== 3. Executing QEMU Fault Injection ==="
 # Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
 
-# Use -serial file: to write directly to the log path.
-# This avoids Linux block-buffering issues associated with standard stdout redirects (>).
-timeout 10 qemu-system-arm \
+# stdbuf -o0 -e0 disables output buffering entirely.
+# This guarantees that even when QEMU is killed by timeout, the log is already written.
+timeout 10 stdbuf -o0 -e0 qemu-system-arm \
     -machine microbit \
     -nographic \
     -monitor none \
-    -serial file:"$LOG_PATH" \
-    -device loader,file=/build/examples/basic/default/bin/microbit/default.elf
+    -serial stdio \
+    -device loader,file=/build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
     
 RIOT_EXIT_CODE=$?
 
-# Exit code 124 means 'timeout' killed the process, which is expected on a system lockup.
+# exit code 124 means 'timeout' killed the process, which is exactly what is expected on a system lockup.
 if [ $RIOT_EXIT_CODE -eq 124 ] || [ $RIOT_EXIT_CODE -ne 0 ]; then
     echo "WARNING: System locked up or crashed! Capturing telemetry..."
     
