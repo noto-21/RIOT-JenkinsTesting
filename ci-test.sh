@@ -4,15 +4,10 @@
 LOG_PATH="/build/handler.log"
 
 echo "=== 1. Auditing Environment & Toolchains ==="
+# Unconditionally install python3-requests and required tools 
 apt-get update -qq && apt-get install -y qemu-system-arm socat python3-requests
 
 arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
-
-# Ensure QEMU is installed in the riotbuild container
-if ! command -v qemu-system-arm &> /dev/null; then
-    echo "Installing QEMU for ARM emulation..."
-    apt-get update -qq && apt-get install -y qemu-system-arm
-fi
 
 echo "=== 2. Compiling RIOT Firmware ==="
 cd /build/examples/basic/default || exit
@@ -21,19 +16,20 @@ make BOARD=microbit clean all
 
 echo "=== 3. Executing QEMU Fault Injection ==="
 # Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
-# Redirect both stdout and stderr to log file for LLaMA to read.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
-# Use -device loader for microbit, disable the monitor, and route serial to stdio
+
+# Use -serial file: to write directly to the log path.
+# This avoids Linux block-buffering issues associated with standard stdout redirects (>).
 timeout 10 qemu-system-arm \
     -machine microbit \
     -nographic \
     -monitor none \
-    -serial stdio \
-    -device loader,file=/build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
+    -serial file:"$LOG_PATH" \
+    -device loader,file=/build/examples/basic/default/bin/microbit/default.elf
     
 RIOT_EXIT_CODE=$?
 
-# exit code 124 means 'timeout' killed the process, which is exactly what is expected on a system lockup.
+# Exit code 124 means 'timeout' killed the process, which is expected on a system lockup.
 if [ $RIOT_EXIT_CODE -eq 124 ] || [ $RIOT_EXIT_CODE -ne 0 ]; then
     echo "WARNING: System locked up or crashed! Capturing telemetry..."
     
