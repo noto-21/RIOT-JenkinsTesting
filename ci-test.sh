@@ -4,13 +4,9 @@
 LOG_PATH="/build/handler.log"
 
 echo "=== 1. Auditing Environment & Toolchains ==="
-arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
+apt-get update -qq && apt-get install -y qemu-system-arm socat python3-requests
 
-# Check explicitly for socat, which RIOT needs to route QEMU serial output
-if ! command -v socat &> /dev/null; then
-    echo "Installing dependencies..."
-	apt-get update -qq && apt-get install -y qemu-system-arm socat python3-requests
-fi
+arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
 
 # Ensure QEMU is installed in the riotbuild container
 if ! command -v qemu-system-arm &> /dev/null; then
@@ -27,7 +23,14 @@ echo "=== 3. Executing QEMU Fault Injection ==="
 # Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
 # Redirect both stdout and stderr to log file for LLaMA to read.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
-timeout 10 qemu-system-arm -machine microbit -nographic -kernel /build/examples/basic/default/bin/microbit/default.elf -serial file:"$LOG_PATH"
+# Use -device loader for microbit, disable the monitor, and route serial to stdio
+timeout 10 qemu-system-arm \
+    -machine microbit \
+    -nographic \
+    -monitor none \
+    -serial stdio \
+    -device loader,file=/build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
+    
 RIOT_EXIT_CODE=$?
 
 # exit code 124 means 'timeout' killed the process, which is exactly what is expected on a system lockup.
