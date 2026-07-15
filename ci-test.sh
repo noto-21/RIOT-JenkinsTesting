@@ -11,21 +11,21 @@ arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
 
 echo "=== 2. Compiling RIOT Firmware ==="
 cd /build/examples/basic/default || exit
-echo "Compiling for 'microbit' (ARM Cortex-M0) target..."
-make BOARD=microbit clean all
+echo "Compiling for 'lm3s811-evb' (ARM Cortex-M3 QEMU target)..."
+make BOARD=lm3s811-evb clean all
 
 echo "=== 3. Executing QEMU Fault Injection ==="
 # Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
 
-# stdbuf -o0 -e0 disables output buffering entirely.
-# This guarantees that even when QEMU is killed by timeout, the log is already written.
+# Use the natively supported lm3s811 machine.
+# stdbuf -o0 -e0 guarantees the crash registers are immediately flushed to the log.
 timeout 10 stdbuf -o0 -e0 qemu-system-arm \
-    -machine microbit \
+    -machine lm3s811 \
     -nographic \
     -monitor none \
     -serial stdio \
-    -device loader,file=/build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
+    -kernel /build/examples/basic/default/bin/lm3s811-evb/default.elf > "$LOG_PATH" 2>&1
     
 RIOT_EXIT_CODE=$?
 
