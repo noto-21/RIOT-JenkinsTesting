@@ -11,26 +11,27 @@ arm-none-eabi-gcc --version || echo "ARM GCC Toolchain not found"
 
 echo "=== 2. Compiling RIOT Firmware ==="
 cd /build/examples/basic/default || exit
-echo "Compiling for 'lm3s811-evb' (ARM Cortex-M3 QEMU target)..."
-# FIXED: Changed BOARD to lm3s811-evb to match the QEMU target and expected binary path
-make BOARD=lm3s811-evb -C /build/examples/basic/default
+echo "Compiling for 'microbit' (ARM Cortex-M0 QEMU target)..."
+
+# TARGET FIX: Use the native 'microbit' board supported by RIOT
+make BOARD=microbit -C /build/examples/basic/default
 
 echo "=== 3. Executing QEMU Fault Injection ==="
 # Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
 
-# FIXED: Changed -machine to lm3s811evb 
+# TARGET FIX: Update machine to microbit and point to the microbit elf directory
 # stdbuf -o0 -e0 guarantees the crash registers are immediately flushed to the log.
 timeout 10 stdbuf -o0 -e0 qemu-system-arm \
-    -machine lm3s811evb \
+    -machine microbit \
     -nographic \
     -monitor none \
     -serial stdio \
-    -kernel /build/examples/basic/default/bin/lm3s811-evb/default.elf > "$LOG_PATH" 2>&1
+    -kernel /build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
     
 RIOT_EXIT_CODE=$?
 
-# exit code 124 means 'timeout' killed the process, which is exactly what is expected on a system lockup.
+# Exit code 124 means 'timeout' killed the process, which is exactly what is expected on a system lockup.
 if [ $RIOT_EXIT_CODE -eq 124 ] || [ $RIOT_EXIT_CODE -ne 0 ]; then
     echo "WARNING: System locked up or crashed! Capturing telemetry..."
     
