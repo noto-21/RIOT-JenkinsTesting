@@ -19,13 +19,15 @@ make BOARD=microbit -C /build/examples/basic/default
 echo "=== 3. Executing QEMU Fault Injection ==="
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
 
-# Let QEMU write directly to the log file using '-serial file'
+# Use -d guest_errors to catch the Null Pointer Dereference at the emulator level
+# Redirect BOTH stdout and stderr to the log path to guarantee telemetry capture
 timeout 10 qemu-system-arm \
     -machine microbit \
     -nographic \
     -monitor none \
-    -serial file:"$LOG_PATH" \
-    -kernel /build/examples/basic/default/bin/microbit/default.elf
+    -serial stdio \
+    -d guest_errors \
+    -kernel /build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
     
 RIOT_EXIT_CODE=$?
 
