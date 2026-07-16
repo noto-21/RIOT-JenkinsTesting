@@ -17,17 +17,15 @@ echo "Compiling for 'microbit' (ARM Cortex-M0 QEMU target)..."
 make BOARD=microbit -C /build/examples/basic/default
 
 echo "=== 3. Executing QEMU Fault Injection ==="
-# Use the 'timeout' command because a HardFault causes RIOT to lock up natively.
 echo "Booting VM... (Waiting 10 seconds to capture the crash)"
 
-# TARGET FIX: Update machine to microbit and point to the microbit elf directory
-# stdbuf -o0 -e0 guarantees the crash registers are immediately flushed to the log.
-timeout 10 stdbuf -o0 -e0 qemu-system-arm \
+# Let QEMU write directly to the log file using '-serial file'
+timeout 10 qemu-system-arm \
     -machine microbit \
     -nographic \
     -monitor none \
-    -serial stdio \
-    -kernel /build/examples/basic/default/bin/microbit/default.elf > "$LOG_PATH" 2>&1
+    -serial file:"$LOG_PATH" \
+    -kernel /build/examples/basic/default/bin/microbit/default.elf
     
 RIOT_EXIT_CODE=$?
 

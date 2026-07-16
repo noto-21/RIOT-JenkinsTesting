@@ -10,7 +10,7 @@ int main(void)
     puts("Injecting a Null Pointer Dereference (NPD)...\n");
 
     /* Force the CPU to waste time so the UART can finish printing */
-    for (volatile uint32_t i = 0; i < 5000000; i++) {
+    for (volatile uint32_t i = 0; i < 50000; i++) {
         __asm__("nop"); // No-operation
     }
 
