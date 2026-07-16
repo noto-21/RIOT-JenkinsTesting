@@ -17,7 +17,7 @@ def analyze_fault(log_path, rtos_name):
     )
 
     payload = {
-        "model": "llama3.1:8b",
+        "model": "qwen3.6",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Here is the {rtos_name} terminal log:\n\n{crash_log}"}
